@@ -88,6 +88,41 @@ executed.
 `--format codex` emits TOML, and `--format claude` emits JSON. Rendering does
 not modify either client's configuration.
 
+### Verified profile examples
+
+These optional profiles have been smoke-tested against a browser started by CDP
+Workspace. They are examples, not built-in defaults; pin package versions when
+reproducibility matters.
+
+```json
+{
+  "mcpProfiles": {
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "chrome-devtools-mcp@latest",
+        "--browser-url={endpoint}",
+        "--no-usage-statistics",
+        "--no-performance-crux"
+      ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest",
+        "--cdp-endpoint={endpoint}"
+      ]
+    }
+  }
+}
+```
+
+Chrome DevTools MCP attaches through `--browser-url`. Playwright MCP attaches
+through `--cdp-endpoint`. In both cases CDP Workspace remains the browser
+lifecycle owner; the MCP server is only a consumer.
+
 ## Path overrides
 
 - `CDP_WORKSPACE_CONFIG`: catalog file.

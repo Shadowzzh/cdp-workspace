@@ -34,6 +34,10 @@ for catalog, probe, start, or stop operations.
   selecting an MCP implementation.
 - Degrade cleanly when the current platform lacks a lifecycle provider.
 
+Interop smoke tests cover both Chrome DevTools MCP and Playwright MCP attaching
+to an already-running CDP Workspace browser. Neither implementation is a runtime
+dependency or default.
+
 CDP Workspace does not install Chrome, Chromium, Playwright, browser MCPs, or
 system services. It does not copy an existing browser profile.
 
