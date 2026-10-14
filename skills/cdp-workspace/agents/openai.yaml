@@ -1,0 +1,6 @@
+interface:
+  display_name: "CDP Workspace"
+  short_description: "Manage named Chrome CDP workspaces"
+  default_prompt: "Use $cdp-workspace to list named CDP workspaces and report their live status."
+policy:
+  allow_implicit_invocation: true

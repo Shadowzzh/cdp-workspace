@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "default": "general",
+  "mcpProfiles": {
+    "example-browser-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "your-browser-mcp-package",
+        "--browser-url={endpoint}"
+      ]
+    }
+  },
+  "workspaces": {
+    "general": {
+      "purpose": "General browsing with a persistent, isolated profile",
+      "session": "Personal session",
+      "endpoint": "http://127.0.0.1:9223",
+      "tags": [
+        "general"
+      ],
+      "lifecycle": {
+        "provider": "auto",
+        "browser": "auto",
+        "headless": false,
+        "extraArgs": []
+      },
+      "mcp": {
+        "serverName": "browser-general",
+        "profile": "example-browser-mcp"
+      }
+    },
+    "remote-research": {
+      "purpose": "An externally managed browser exposed through a local tunnel",
+      "session": "Research session",
+      "endpoint": "http://127.0.0.1:19321",
+      "tags": [
+        "remote"
+      ],
+      "lifecycle": {
+        "provider": "external"
+      }
+    }
+  }
+}

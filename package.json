@@ -1,0 +1,15 @@
+{
+  "name": "cdp-workspace-repository",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Source repository for the cdp-workspace agent skill",
+  "type": "module",
+  "engines": {
+    "node": ">=22.20.0"
+  },
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check skills/cdp-workspace/scripts/cdp-workspace.mjs"
+  },
+  "license": "MIT"
+}

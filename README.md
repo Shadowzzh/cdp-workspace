@@ -1,0 +1,72 @@
+# CDP Workspace
+
+CDP Workspace manages a catalog of named Chrome DevTools Protocol endpoints.
+Each workspace records its purpose, intended session, isolated browser profile,
+lifecycle provider, and optional MCP connection profile.
+
+The project deliberately does not automate pages. It never opens a CDP
+WebSocket and only probes `GET /json/version`. Browser automation remains the
+responsibility of an optional MCP server chosen by the user.
+
+## Install the agent skill
+
+```bash
+npx skills add Shadowzzh/cdp-workspace
+```
+
+The installed skill contains a dependency-free Node.js CLI. The `skills` CLI
+currently requires Node.js 22.20 or newer, which is also this project's runtime
+baseline.
+
+## Capabilities
+
+- Catalog and validate named CDP workspaces.
+- Probe live browser metadata through `/json/version` only.
+- Start and stop managed browsers with macOS LaunchAgents.
+- Start and stop managed browsers with transient Linux systemd user services.
+- Keep remote or otherwise externally managed endpoints in the same catalog.
+- Render MCP launch snippets from user-defined templates without installing or
+  selecting an MCP implementation.
+- Degrade cleanly when the current platform lacks a lifecycle provider.
+
+CDP Workspace does not install Chrome, Chromium, Playwright, browser MCPs, or
+system services. It does not copy an existing browser profile.
+
+## Quick start
+
+From the installed skill directory:
+
+```bash
+node scripts/cdp-workspace.mjs paths
+node scripts/cdp-workspace.mjs init
+node scripts/cdp-workspace.mjs doctor
+node scripts/cdp-workspace.mjs list
+```
+
+Use `--config <path>` or `CDP_WORKSPACE_CONFIG` to select another workspace
+catalog.
+
+See [`examples/workspaces.json`](examples/workspaces.json) and the skill's
+[`configuration reference`](skills/cdp-workspace/references/configuration.md).
+
+## Lifecycle model
+
+The `auto` provider resolves to `launchd` on macOS and `systemd-user` on Linux.
+Other platforms can still validate catalogs and probe external endpoints, but
+managed start and stop operations return a structured unsupported-platform
+error.
+
+Linux uses transient user services. It does not enable lingering or write
+system-wide units. macOS generates per-workspace LaunchAgents with
+`RunAtLoad=false` and `KeepAlive=false`.
+
+## Development
+
+```bash
+npm test
+npm run check
+```
+
+The tests use a fake HTTP endpoint that rejects every path except
+`/json/version`, proving that the probe does not enumerate targets or issue CDP
+commands.
