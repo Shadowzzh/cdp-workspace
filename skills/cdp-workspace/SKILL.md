@@ -48,9 +48,9 @@ protocol version. Never expose `webSocketDebuggerUrl`.
 
 ## MCP boundary
 
-MCP profiles are user-defined command and argument templates. The CLI may render
-generic, Codex, or Claude snippets, but it does not install MCP packages, edit
-client configuration, or assume a particular browser MCP.
+MCP profiles are user-defined stdio launch templates or Streamable HTTP URLs.
+The CLI may render generic, Codex, or Claude snippets, but it does not install
+MCP packages, edit client configuration, or assume a particular browser MCP.
 
 If the user asks to configure catalogs, lifecycle behavior, paths, or MCP
 profiles, read [references/configuration.md](references/configuration.md). For

@@ -7,6 +7,8 @@ const NAME_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,46}[a-z0-9])?$/;
 const MCP_NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 const ENV_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
 const PROVIDERS = new Set(["auto", "launchd", "systemd-user", "external"]);
+const MCP_TRANSPORTS = new Set(["stdio", "http"]);
+const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]", "::1"]);
 const RESERVED_BROWSER_ARGS = [
   "--remote-debugging-address",
   "--remote-debugging-port",
@@ -66,8 +68,7 @@ export function validateEndpoint(rawEndpoint) {
     fail("invalid_endpoint", `Invalid endpoint: ${rawEndpoint}`);
   }
 
-  const loopbackHosts = new Set(["127.0.0.1", "localhost", "[::1]", "::1"]);
-  if (endpoint.protocol !== "http:" || !loopbackHosts.has(endpoint.hostname)) {
+  if (endpoint.protocol !== "http:" || !LOOPBACK_HOSTS.has(endpoint.hostname)) {
     fail(
       "invalid_endpoint",
       "endpoint must use plain HTTP on 127.0.0.1, localhost, or ::1.",
@@ -87,6 +88,33 @@ export function validateEndpoint(rawEndpoint) {
     fail("invalid_endpoint", "endpoint must not contain a path, query, or fragment.");
   }
   return endpoint.origin;
+}
+
+export function validateMcpUrl(rawUrl) {
+  if (typeof rawUrl !== "string") {
+    fail("invalid_mcp_url", "MCP URL must be a string.");
+  }
+
+  let url;
+  try {
+    url = new URL(rawUrl);
+  } catch {
+    fail("invalid_mcp_url", `Invalid MCP URL: ${rawUrl}`);
+  }
+
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    fail("invalid_mcp_url", "MCP URL must use HTTP or HTTPS.");
+  }
+  if (url.protocol === "http:" && !LOOPBACK_HOSTS.has(url.hostname)) {
+    fail("invalid_mcp_url", "Plain HTTP MCP URLs are limited to loopback hosts.");
+  }
+  if (url.username || url.password) {
+    fail("invalid_mcp_url", "MCP URL must not contain credentials.");
+  }
+  if (url.hash) {
+    fail("invalid_mcp_url", "MCP URL must not contain a fragment.");
+  }
+  return url.href;
 }
 
 function normalizeEnvironment(value, label) {
@@ -116,6 +144,30 @@ function normalizeMcpProfiles(value) {
   for (const [name, rawProfile] of Object.entries(source)) {
     validateName(name, "MCP profile name");
     const profile = requireObject(rawProfile, `mcpProfiles.${name}`);
+    const transport = optionalString(
+      profile.transport,
+      `mcpProfiles.${name}.transport`,
+      "stdio",
+    );
+    if (!MCP_TRANSPORTS.has(transport)) {
+      fail(
+        "invalid_catalog",
+        `mcpProfiles.${name}.transport must be stdio or http.`,
+      );
+    }
+
+    if (transport === "http") {
+      const url = validateMcpUrl(profile.url);
+      if (profile.command !== undefined || profile.args !== undefined || profile.env !== undefined) {
+        fail(
+          "invalid_catalog",
+          `mcpProfiles.${name} cannot mix HTTP URL and stdio command fields.`,
+        );
+      }
+      profiles[name] = { transport, url };
+      continue;
+    }
+
     const command = optionalString(profile.command, `mcpProfiles.${name}.command`);
     if (!command) {
       fail("invalid_catalog", `mcpProfiles.${name}.command is required.`);
@@ -129,7 +181,13 @@ function normalizeMcpProfiles(value) {
         `mcpProfiles.${name} must use {endpoint} in args or env.`,
       );
     }
-    profiles[name] = { command, args, env };
+    if (profile.url !== undefined) {
+      fail(
+        "invalid_catalog",
+        `mcpProfiles.${name} cannot mix stdio command fields and HTTP URL.`,
+      );
+    }
+    profiles[name] = { transport, command, args, env };
   }
   return profiles;
 }

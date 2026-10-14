@@ -30,13 +30,13 @@ for catalog, probe, start, or stop operations.
 - Start and stop managed browsers with macOS LaunchAgents.
 - Start and stop managed browsers with transient Linux systemd user services.
 - Keep remote or otherwise externally managed endpoints in the same catalog.
-- Render MCP launch snippets from user-defined templates without installing or
-  selecting an MCP implementation.
+- Render stdio or Streamable HTTP MCP snippets from user-defined profiles
+  without installing or selecting an MCP implementation.
 - Degrade cleanly when the current platform lacks a lifecycle provider.
 
-Interop smoke tests cover both Chrome DevTools MCP and Playwright MCP attaching
-to an already-running CDP Workspace browser. Neither implementation is a runtime
-dependency or default.
+Interop smoke tests cover Chrome DevTools MCP over stdio and Playwright MCP over
+both stdio and Streamable HTTP, all attaching to an already-running CDP
+Workspace browser. Neither implementation is a runtime dependency or default.
 
 CDP Workspace does not install Chrome, Chromium, Playwright, browser MCPs, or
 system services. It does not copy an existing browser profile.

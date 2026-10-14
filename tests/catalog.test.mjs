@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   normalizeCatalog,
   validateEndpoint,
+  validateMcpUrl,
 } from "../skills/cdp-workspace/scripts/lib/catalog.mjs";
 
 function catalog(overrides = {}) {
@@ -88,4 +89,58 @@ test("requires MCP templates to reference the workspace endpoint", () => {
       ),
     { code: "invalid_catalog" },
   );
+});
+
+test("normalizes stdio MCP profiles without an explicit transport", () => {
+  const result = normalizeCatalog(
+    catalog({
+      mcpProfiles: {
+        custom: {
+          command: "browser-mcp",
+          args: ["--endpoint={endpoint}"],
+        },
+      },
+    }),
+  );
+  assert.equal(result.mcpProfiles.custom.transport, "stdio");
+});
+
+test("accepts secure HTTP MCP URLs and rejects unsafe variants", () => {
+  assert.equal(
+    validateMcpUrl("http://localhost:19583/mcp"),
+    "http://localhost:19583/mcp",
+  );
+  assert.equal(
+    validateMcpUrl("https://mcp.example.com/mcp"),
+    "https://mcp.example.com/mcp",
+  );
+  assert.throws(() => validateMcpUrl("http://192.168.1.5:8931/mcp"), {
+    code: "invalid_mcp_url",
+  });
+  assert.throws(() => validateMcpUrl("https://user:secret@mcp.example.com/mcp"), {
+    code: "invalid_mcp_url",
+  });
+});
+
+test("normalizes HTTP MCP profiles without requiring a CDP placeholder", () => {
+  const result = normalizeCatalog(
+    catalog({
+      mcpProfiles: {
+        remote: {
+          transport: "http",
+          url: "http://localhost:19583/mcp",
+        },
+      },
+      workspaces: {
+        general: {
+          endpoint: "http://127.0.0.1:9223",
+          mcp: { serverName: "browser-http", profile: "remote" },
+        },
+      },
+    }),
+  );
+  assert.deepEqual(result.mcpProfiles.remote, {
+    transport: "http",
+    url: "http://localhost:19583/mcp",
+  });
 });

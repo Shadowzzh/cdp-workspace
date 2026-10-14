@@ -19,15 +19,23 @@ function renderProfile(catalog, workspace, overrideProfile = undefined) {
     fail("mcp_profile_missing", `MCP profile does not exist: ${profileName}`);
   }
 
+  const shared = {
+    workspace: workspace.name,
+    endpoint: workspace.endpoint,
+    profile: profileName,
+    serverName: workspace.mcp?.serverName ?? `cdp-${workspace.name}`,
+    transport: profile.transport,
+  };
+  if (profile.transport === "http") {
+    return { ...shared, url: profile.url };
+  }
+
   const env = {};
   for (const [name, value] of Object.entries(profile.env)) {
     env[name] = replacePlaceholders(value, workspace);
   }
   return {
-    workspace: workspace.name,
-    endpoint: workspace.endpoint,
-    profile: profileName,
-    serverName: workspace.mcp?.serverName ?? `cdp-${workspace.name}`,
+    ...shared,
     command: replacePlaceholders(profile.command, workspace),
     args: profile.args.map((argument) => replacePlaceholders(argument, workspace)),
     env,
@@ -42,6 +50,10 @@ function renderCodex(specs) {
   const sections = [];
   for (const spec of specs) {
     const prefix = `mcp_servers.${tomlString(spec.serverName)}`;
+    if (spec.transport === "http") {
+      sections.push([`[${prefix}]`, `url = ${tomlString(spec.url)}`].join("\n"));
+      continue;
+    }
     const lines = [
       `[${prefix}]`,
       `command = ${tomlString(spec.command)}`,
@@ -61,6 +73,10 @@ function renderCodex(specs) {
 function renderClaude(specs) {
   const mcpServers = {};
   for (const spec of specs) {
+    if (spec.transport === "http") {
+      mcpServers[spec.serverName] = { type: "http", url: spec.url };
+      continue;
+    }
     const value = { command: spec.command, args: spec.args };
     if (Object.keys(spec.env).length > 0) {
       value.env = spec.env;

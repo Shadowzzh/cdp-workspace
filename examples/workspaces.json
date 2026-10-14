@@ -3,12 +3,17 @@
   "default": "general",
   "mcpProfiles": {
     "example-browser-mcp": {
+      "transport": "stdio",
       "command": "npx",
       "args": [
         "-y",
         "your-browser-mcp-package",
         "--browser-url={endpoint}"
       ]
+    },
+    "example-http-mcp": {
+      "transport": "http",
+      "url": "http://localhost:8931/mcp"
     }
   },
   "workspaces": {

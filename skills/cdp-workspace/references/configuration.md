@@ -64,12 +64,18 @@ secrets in the catalog.
 
 ## MCP profiles
 
-MCP profiles are optional stdio launch templates:
+MCP profiles are optional connection definitions. A profile uses either stdio
+or Streamable HTTP transport.
+
+### Stdio profiles
+
+Stdio profiles define a process that the MCP client launches:
 
 ```json
 {
   "mcpProfiles": {
     "my-browser-mcp": {
+      "transport": "stdio",
       "command": "npx",
       "args": ["-y", "some-package", "--endpoint={endpoint}"],
       "env": {
@@ -80,9 +86,32 @@ MCP profiles are optional stdio launch templates:
 }
 ```
 
-Supported placeholders are `{endpoint}` and `{name}`. A profile must use
+`transport` defaults to `stdio` for backward compatibility. Supported stdio
+placeholders are `{endpoint}` and `{name}`. A stdio profile must use
 `{endpoint}` in an argument or environment value. Templates are rendered, not
 executed.
+
+### Streamable HTTP profiles
+
+HTTP profiles point at an MCP server that is already running:
+
+```json
+{
+  "mcpProfiles": {
+    "local-playwright-http": {
+      "transport": "http",
+      "url": "http://localhost:19583/mcp"
+    }
+  }
+}
+```
+
+Plain HTTP is accepted only for `localhost`, `127.0.0.1`, or `::1`. Remote MCP
+servers must use HTTPS. URLs containing credentials or fragments are rejected.
+Do not put tokens in URLs.
+
+CDP Workspace does not start or stop an HTTP MCP server. It records the client
+connection and renders configuration for an independently managed server.
 
 `mcp-snippet --format generic` returns a neutral launch specification.
 `--format codex` emits TOML, and `--format claude` emits JSON. Rendering does
@@ -99,6 +128,7 @@ reproducibility matters.
   "mcpProfiles": {
     "chrome-devtools": {
       "command": "npx",
+      "transport": "stdio",
       "args": [
         "-y",
         "chrome-devtools-mcp@latest",
@@ -108,12 +138,17 @@ reproducibility matters.
       ]
     },
     "playwright": {
+      "transport": "stdio",
       "command": "npx",
       "args": [
         "-y",
         "@playwright/mcp@latest",
         "--cdp-endpoint={endpoint}"
       ]
+    },
+    "playwright-http": {
+      "transport": "http",
+      "url": "http://localhost:19583/mcp"
     }
   }
 }
@@ -122,6 +157,10 @@ reproducibility matters.
 Chrome DevTools MCP attaches through `--browser-url`. Playwright MCP attaches
 through `--cdp-endpoint`. In both cases CDP Workspace remains the browser
 lifecycle owner; the MCP server is only a consumer.
+
+For Playwright Streamable HTTP, keep the browser CDP endpoint separate from the
+MCP client URL. Playwright's default Host guard may require the client URL to
+use `localhost` even when the MCP process listens on `127.0.0.1`.
 
 ## Path overrides
 
