@@ -14,9 +14,14 @@ responsibility of an optional MCP server chosen by the user.
 npx skills add Shadowzzh/cdp-workspace
 ```
 
-The installed skill contains a dependency-free Node.js CLI. The `skills` CLI
-currently requires Node.js 22.20 or newer, which is also this project's runtime
-baseline.
+Prerequisites for the `owner/repo` install path are Node.js, `npx`, and Git. The
+`skills` CLI currently clones GitHub repositories with Git and requires Node.js
+22.20 or newer.
+
+The installed skill itself contains a dependency-free Node.js CLI. Chrome or a
+Chromium-family browser is required only when CDP Workspace owns a local browser
+lifecycle. Playwright and browser MCP servers are optional and are not required
+for catalog, probe, start, or stop operations.
 
 ## Capabilities
 
